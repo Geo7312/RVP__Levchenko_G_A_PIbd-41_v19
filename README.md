@@ -28,7 +28,7 @@ lab1-book-library/
         ├── application.yml                   — общий конфиг (профиль по умолчанию: local)
         ├── application-local.yml             — БД на localhost
         ├── application-docker.yml            — БД по имени сервиса `db` в docker-сети
-        └── db/changelog/                     — миграции Liquibase (создание таблицы books)
+        └── db/changelog/                     — миграции Liquibase (таблица books и разделение имени автора)
 ```
 
 ## Вариант 1. Локальный запуск (БД в контейнере, приложение — на хосте)
@@ -77,7 +77,7 @@ http://localhost:8080/swagger-ui.html
 |---|---|---|
 | GET | `/api/books` | список всех книг |
 | GET | `/api/books/{id}` | книга по id |
-| POST | `/api/books` | добавить книгу (title, author, isbn) |
+| POST | `/api/books` | добавить книгу (title, authorLastName, authorFirstName, authorPatronymic, isbn) |
 | PUT | `/api/books/{id}` | отредактировать книгу |
 | DELETE | `/api/books/{id}` | удалить книгу |
 | POST | `/api/books/{id}/issue-to-hands` | выдать книгу читателю на руки (readerName) |
@@ -94,7 +94,7 @@ http://localhost:8080/swagger-ui.html
 # добавить книгу
 curl -X POST http://localhost:8080/api/books \
   -H "Content-Type: application/json" \
-  -d '{"title":"Война и мир","author":"Л. Н. Толстой","isbn":"978-5-17-090515-4"}'
+  -d '{"title":"Война и мир","authorLastName":"Толстой","authorFirstName":"Лев","authorPatronymic":"Николаевич","isbn":"978-5-17-090515-4"}'
 
 # выдать на руки
 curl -X POST http://localhost:8080/api/books/1/issue-to-hands \

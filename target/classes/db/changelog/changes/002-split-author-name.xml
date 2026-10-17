@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-split-author-name" author="levchenko">
+        <addColumn tableName="books">
+            <column name="author_last_name" type="VARCHAR(255)"/>
+            <column name="author_first_name" type="VARCHAR(255)"/>
+            <column name="author_patronymic" type="VARCHAR(255)"/>
+        </addColumn>
+
+        
+        <sql dbms="postgresql"><![CDATA[
+            WITH author_parts AS (
+                SELECT id, regexp_split_to_array(btrim(author), '\s+') AS parts
+                FROM books
+            )
+            UPDATE books AS b
+            SET author_last_name = CASE
+                    WHEN cardinality(p.parts) = 3
+                         AND right(p.parts[1], 1) = '.'
+                         AND right(p.parts[2], 1) = '.'
+                    THEN p.parts[3]
+                    ELSE p.parts[1]
+                END,
+                author_first_name = CASE
+                    WHEN cardinality(p.parts) = 3
+                         AND right(p.parts[1], 1) = '.'
+                         AND right(p.parts[2], 1) = '.'
+                    THEN p.parts[1]
+                    ELSE p.parts[2]
+                END,
+                author_patronymic = CASE
+                    WHEN cardinality(p.parts) = 3
+                         AND right(p.parts[1], 1) = '.'
+                         AND right(p.parts[2], 1) = '.'
+                    THEN p.parts[2]
+                    ELSE nullif(array_to_string(p.parts[3:cardinality(p.parts)], ' '), '')
+                END
+            FROM author_parts AS p
+            WHERE b.id = p.id;
+        ]]></sql>
+
+        <addNotNullConstraint tableName="books" columnName="author_last_name" columnDataType="VARCHAR(255)"/>
+        <dropColumn tableName="books" columnName="author"/>
+    </changeSet>
+</databaseChangeLog>

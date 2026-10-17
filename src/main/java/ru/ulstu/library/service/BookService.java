@@ -1,6 +1,5 @@
 package ru.ulstu.library.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ulstu.library.dto.BookCreateRequest;
@@ -15,10 +14,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class BookService {
 
     private final BookRepository bookRepository;
+
+    public BookService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
 
     @Transactional(readOnly = true)
     public List<Book> findAll() {
@@ -33,13 +35,14 @@ public class BookService {
 
     @Transactional
     public Book create(BookCreateRequest request) {
-        Book book = Book.builder()
-                .title(request.getTitle())
-                .author(request.getAuthor())
-                .isbn(request.getIsbn())
-                .status(BookStatus.IN_LIBRARY)
-                .createdAt(LocalDateTime.now())
-                .build();
+        Book book = new Book();
+        book.setTitle(request.getTitle());
+        book.setAuthorLastName(request.getAuthorLastName());
+        book.setAuthorFirstName(request.getAuthorFirstName());
+        book.setAuthorPatronymic(request.getAuthorPatronymic());
+        book.setIsbn(request.getIsbn());
+        book.setStatus(BookStatus.IN_LIBRARY);
+        book.setCreatedAt(LocalDateTime.now());
         return bookRepository.save(book);
     }
 
@@ -47,7 +50,9 @@ public class BookService {
     public Book update(Long id, BookUpdateRequest request) {
         Book book = findById(id);
         book.setTitle(request.getTitle());
-        book.setAuthor(request.getAuthor());
+        book.setAuthorLastName(request.getAuthorLastName());
+        book.setAuthorFirstName(request.getAuthorFirstName());
+        book.setAuthorPatronymic(request.getAuthorPatronymic());
         book.setIsbn(request.getIsbn());
         return bookRepository.save(book);
     }

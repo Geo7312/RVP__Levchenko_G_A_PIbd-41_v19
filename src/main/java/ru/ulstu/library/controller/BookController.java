@@ -3,7 +3,6 @@ package ru.ulstu.library.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.ulstu.library.dto.BookCreateRequest;
@@ -16,11 +15,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
-@RequiredArgsConstructor
 @Tag(name = "Книги", description = "Учёт книг и читателей в библиотеке (вариант 19)")
 public class BookController {
 
     private final BookService bookService;
+
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
+    }
 
     @GetMapping
     @Operation(summary = "Получить список всех книг")
