@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: library-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: main-service
+          uri: ${LIBRARY_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/books,/api/books/**
+        - id: report-service
+          uri: ${REPORT_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/reports,/api/reports/**
+
+server:
+  port: 8082

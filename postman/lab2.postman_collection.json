@@ -1,0 +1,94 @@
+{
+  "info": {
+    "name": "РВП — лабораторная 2",
+    "description": "Проверка основного сервиса и сервиса отчётов через шлюз. Запускать запросы сверху вниз.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Создать книгу через шлюз",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"title\":\"Война и мир\",\"authorLastName\":\"Толстой\",\"authorFirstName\":\"Лев\",\"authorPatronymic\":\"Николаевич\",\"isbn\":\"978-5-17-090515-4\"}"
+        },
+        "url": "{{gatewayUrl}}/api/books"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Книга создана', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('bookId', pm.response.json().id);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "2. Прочитать книгу через шлюз",
+      "request": { "method": "GET", "url": "{{gatewayUrl}}/api/books/{{bookId}}" },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Основной сервис отвечает через шлюз', () => pm.response.to.have.status(200));",
+            "pm.test('Вернулся созданный ID', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('bookId'))));"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "3. Выдать книгу через шлюз",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"readerName\":\"Иванов Иван\"}" },
+        "url": "{{gatewayUrl}}/api/books/{{bookId}}/issue-to-hands"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Книга выдана', () => pm.response.to.have.status(200));",
+            "pm.test('Статус ON_HANDS', () => pm.expect(pm.response.json().status).to.eql('ON_HANDS'));"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "4. Список отчёта через шлюз",
+      "request": { "method": "GET", "url": "{{gatewayUrl}}/api/reports/books" },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Сервис отчётов отвечает через шлюз', () => pm.response.to.have.status(200));",
+            "pm.test('В отчёте есть выданная книга', () => pm.expect(pm.response.json().some(book => book.id === Number(pm.collectionVariables.get('bookId')) && book.status === 'ON_HANDS')).to.be.true);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "5. Прямой доступ к отчёту (ЛР2)",
+      "request": { "method": "GET", "url": "{{reportUrl}}/api/reports/books" },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [ "pm.test('Прямой доступ пока работает', () => pm.response.to.have.status(200));" ]
+        }
+      }]
+    }
+  ],
+  "variable": [
+    { "key": "gatewayUrl", "value": "http://localhost:8082" },
+    { "key": "reportUrl", "value": "http://localhost:8081" },
+    { "key": "bookId", "value": "" }
+  ]
+}

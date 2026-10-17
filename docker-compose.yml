@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
@@ -34,6 +32,39 @@ services:
       SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"
+    networks:
+      - library_net
+
+  report-service:
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8081:8081"
+    networks:
+      - library_net
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - app
+      - report-service
+    environment:
+      LIBRARY_SERVICE_URL: http://app:8080
+      REPORT_SERVICE_URL: http://report-service:8081
+    ports:
+      - "8082:8082"
     networks:
       - library_net
 
